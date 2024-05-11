@@ -10,4 +10,4 @@ CREATE TABLE Tasks (
     Status BIT
 );
 GO
-GRANT DELETE ON dbo.Tasks TO TestUser;
+GRANT INSERT, SELECT, UPDATE, DELETE ON dbo.Tasks TO TestUser;
