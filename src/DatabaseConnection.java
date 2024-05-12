@@ -76,11 +76,10 @@ public class DatabaseConnection {
 
     public List<String> searchTasks(String searchText) throws SQLException {
         List<String> foundTasks = new ArrayList<>();
-        String sql = "SELECT TaskID, TaskNAME FROM Tasks WHERE TaskNAME LIKE ? OR Description LIKE ?";
+        String sql = "SELECT TaskID, TaskNAME FROM Tasks WHERE TaskNAME LIKE ?";
         try (Connection conn = this.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, "%" + searchText + "%");
-            stmt.setString(2, "%" + searchText + "%");
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     int id = rs.getInt("TaskID");
