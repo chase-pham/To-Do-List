@@ -90,4 +90,32 @@ public class DatabaseConnection {
         }
         return foundTasks;
     }
+
+    public List<String> getTasksSortedBy(String columnName) throws SQLException {
+        List<String> tasks = new ArrayList<>();
+        String sql = "SELECT TaskID, TaskNAME FROM Tasks ORDER BY " + columnName;
+        try (Connection conn = getConnection();  // Ensure this method is static if called statically
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                int id = rs.getInt("TaskID");
+                String name = rs.getString("TaskNAME");
+                tasks.add(id + ": " + name);
+            }
+        }
+        return tasks;
+    }    
+    
+    private String buildSortQuery(String sortBy) {
+        switch (sortBy) {
+            case "Priority":
+                return "SELECT TaskID, TaskNAME FROM Tasks ORDER BY Priority DESC";
+            case "CompletionStatus":
+                return "SELECT TaskID, TaskNAME FROM Tasks ORDER BY CompletionStatus DESC";
+            case "Date":
+                return "SELECT TaskID, TaskNAME FROM Tasks ORDER BY DueDate DESC";
+            default:
+                return "SELECT TaskID, TaskNAME FROM Tasks ORDER BY TaskID";
+        }
+    }
 }
