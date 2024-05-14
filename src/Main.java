@@ -25,11 +25,15 @@ public class Main {
             JTextField searchField = new JTextField(20);
             searchField.setBorder(BorderFactory.createTitledBorder("Search Tasks"));
 
+            String[] sortOptions = {"Priority", "CompletionStatus", "Due Date"};
+            JComboBox<String> sortComboBox = new JComboBox<>(sortOptions);
+
 
             JButton createButton = new JButton("Submit Task");
             JButton deleteButton = new JButton("Delete Task");
             JButton updateButton = new JButton("Update Task");
             JButton searchButton = new JButton("Search");
+            JButton sortButton = new JButton("Sort");
 
             JList<String> taskList = new JList<>();
 
@@ -53,6 +57,9 @@ public class Main {
             panel.add(updateButton);
             panel.add(searchField);
             panel.add(searchButton);
+            panel.add(sortComboBox);
+            panel.add(sortButton);
+
             panel.add(new JScrollPane(taskList)); // Add scrolling to task list
             
             frame.getContentPane().add(panel); // Adds panel to frame
@@ -73,6 +80,11 @@ public class Main {
             updateButton.addActionListener(e -> updateTask(frame, taskList));
             
             searchButton.addActionListener(e -> searchTasks(searchField, taskList, frame));
+
+            sortButton.addActionListener(e -> {
+                String selectedSort = (String) sortComboBox.getSelectedItem();
+                sortTasks(selectedSort, taskList);
+            });
 
             refreshTaskList(taskList);
         });
@@ -146,6 +158,30 @@ public class Main {
             list.setListData(tasks.toArray(new String[0]));
         } catch (SQLException e) {
             JOptionPane.showMessageDialog(null, "Failed to fetch tasks: " + e.getMessage());
+        }
+    }
+
+    // Method to handle sorting logic
+    private static void sortTasks(String sortType, JList<String> list) {
+        try {
+            List<String> sortedTasks;
+            switch (sortType) {
+                case "Priority":
+                    sortedTasks = new DatabaseConnection().getTasksSortedBy("Priority");
+                    break;
+                case "CompletionStatus":
+                    sortedTasks = new DatabaseConnection().getTasksSortedBy("CompletionStatus");
+                    break;
+                case "Due Date":
+                    sortedTasks = new DatabaseConnection().getTasksSortedBy("DueDate");
+                    break;
+                default:
+                    sortedTasks = new DatabaseConnection().getAllTasksWithIds(); // Default to unsorted
+                    break;
+            }
+            list.setListData(sortedTasks.toArray(new String[0]));
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(null, "Failed to sort tasks: " + ex.getMessage());
         }
     }
 }
