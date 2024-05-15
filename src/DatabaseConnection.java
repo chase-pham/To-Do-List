@@ -31,16 +31,20 @@ public class DatabaseConnection {
         }
     }    
 
-    public void updateTask(int taskId, String newTaskName) throws SQLException {
-        String sql = "UPDATE Tasks SET TaskNAME = ? WHERE TaskID = ?";
+    public void updateTask(int taskId, String newTaskName, String newDescription, String newDueDate, int newPriority, boolean newCompletionStatus) throws SQLException {
+        String sql = "UPDATE Tasks SET TaskNAME = ?, Description = ?, DueDate = ?, Priority = ?, CompletionStatus = ? WHERE TaskID = ?";
         try (Connection conn = this.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, newTaskName);
-            stmt.setInt(2, taskId);
-            stmt.executeUpdate();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, newTaskName);
+            pstmt.setString(2, newDescription);
+            pstmt.setString(3, newDueDate);
+            pstmt.setInt(4, newPriority);
+            pstmt.setBoolean(5, newCompletionStatus);
+            pstmt.setInt(6, taskId);
+            pstmt.executeUpdate();
         }
     }
-
+    
     public List<String> getAllTasksWithIds() throws SQLException {
         List<String> tasks = new ArrayList<>();
         String sql = "SELECT TaskID, TaskNAME FROM Tasks;";
