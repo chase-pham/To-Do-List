@@ -16,18 +16,29 @@ public class Main {
         SwingUtilities.invokeLater(() -> {
             JFrame frame = new JFrame("To-Do List Application");
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            frame.setSize(350, 450); //Increased height to accommodate task list
+            frame.setSize(350, 500); // Increased height to accommodate new fields
 
             JTextField textField = new JTextField(20);
             textField.setBorder(new TitledBorder("Enter Task"));
             Border border = BorderFactory.createTitledBorder("Task");
             textField.setBorder(border);
+
+            JTextField descriptionField = new JTextField(20);
+            descriptionField.setBorder(BorderFactory.createTitledBorder("Description"));
+
+            JTextField dueDateField = new JTextField(20);
+            dueDateField.setBorder(BorderFactory.createTitledBorder("Due Date (YYYY-MM-DD)"));
+
+            JTextField priorityField = new JTextField(20);
+            priorityField.setBorder(BorderFactory.createTitledBorder("Priority (Integer)"));
+
+            JCheckBox completionStatusCheckBox = new JCheckBox("Completed");
+
             JTextField searchField = new JTextField(20);
             searchField.setBorder(BorderFactory.createTitledBorder("Search Tasks"));
 
             String[] sortOptions = {"Priority", "CompletionStatus", "Due Date"};
             JComboBox<String> sortComboBox = new JComboBox<>(sortOptions);
-
 
             JButton createButton = new JButton("Submit Task");
             JButton deleteButton = new JButton("Delete Task");
@@ -37,9 +48,12 @@ public class Main {
 
             JList<String> taskList = new JList<>();
 
-
             Font font = new Font("Arial", Font.PLAIN, 14);
             textField.setFont(font);
+            descriptionField.setFont(font);
+            dueDateField.setFont(font);
+            priorityField.setFont(font);
+            completionStatusCheckBox.setFont(font);
             createButton.setFont(font);
             deleteButton.setFont(font);
             updateButton.setFont(font);
@@ -52,6 +66,10 @@ public class Main {
             JPanel panel = new JPanel();
             panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS)); // Use BoxLayout for vertical stacking
             panel.add(textField);
+            panel.add(descriptionField);
+            panel.add(dueDateField);
+            panel.add(priorityField);
+            panel.add(completionStatusCheckBox);
             panel.add(createButton);
             panel.add(deleteButton);
             panel.add(updateButton);
@@ -59,26 +77,30 @@ public class Main {
             panel.add(searchButton);
             panel.add(sortComboBox);
             panel.add(sortButton);
-
             panel.add(new JScrollPane(taskList)); // Add scrolling to task list
-            
+
             frame.getContentPane().add(panel); // Adds panel to frame
             frame.setVisible(true);
 
             // Add action listener to button
             createButton.addActionListener(e -> {
                 String task = textField.getText();
-                if (!task.isEmpty()) {
-                    insertTask(task, frame, textField, taskList);
+                String description = descriptionField.getText();
+                String dueDate = dueDateField.getText();
+                int priority = Integer.parseInt(priorityField.getText());
+                boolean completionStatus = completionStatusCheckBox.isSelected();
+
+                if (!task.isEmpty() && !dueDate.isEmpty() && !priorityField.getText().isEmpty()) {
+                    insertTask(task, description, dueDate, priority, completionStatus, frame, textField, dueDateField, priorityField, completionStatusCheckBox, taskList);
                 } else {
-                    JOptionPane.showMessageDialog(frame, "Please enter a task name.");
+                    JOptionPane.showMessageDialog(frame, "Please fill all fields.");
                 }
             });
 
             deleteButton.addActionListener(e -> deleteTask(frame, taskList));
 
             updateButton.addActionListener(e -> updateTask(frame, taskList));
-            
+
             searchButton.addActionListener(e -> searchTasks(searchField, taskList, frame));
 
             sortButton.addActionListener(e -> {
@@ -89,16 +111,23 @@ public class Main {
             refreshTaskList(taskList);
         });
     }
-    private static void insertTask(String task, JFrame frame, JTextField textField, JList<String> taskList) {
+
+    private static void insertTask(String task, String description, String dueDate, int priority, boolean completionStatus, JFrame frame, JTextField textField, JTextField dueDateField, JTextField priorityField, JCheckBox completionStatusCheckBox, JList<String> taskList) {
         try (Connection conn = DatabaseConnection.getConnection()) {
-            String sql = "INSERT INTO Tasks (TaskNAME, Description) VALUES (?, ?)";
+            String sql = "INSERT INTO Tasks (TaskNAME, Description, DueDate, Priority, CompletionStatus) VALUES (?, ?, ?, ?, ?)";
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
                 stmt.setString(1, task);
-                stmt.setString(2, "New Task added from GUI");
+                stmt.setString(2, description);
+                stmt.setString(3, dueDate);
+                stmt.setInt(4, priority);
+                stmt.setBoolean(5, completionStatus);
                 int rowsAffected = stmt.executeUpdate();
                 if (rowsAffected > 0) {
                     JOptionPane.showMessageDialog(frame, "Task added successfully!");
                     textField.setText("");
+                    dueDateField.setText("");
+                    priorityField.setText("");
+                    completionStatusCheckBox.setSelected(false);
                     refreshTaskList(taskList);
                 }
             }
@@ -127,8 +156,13 @@ public class Main {
             try {
                 int taskId = Integer.parseInt(taskIdString);
                 String newTaskName = JOptionPane.showInputDialog(frame, "Enter new task name:");
-                if (newTaskName != null && !newTaskName.isEmpty()) {
-                    new DatabaseConnection().updateTask(taskId, newTaskName);
+                String newDescription = JOptionPane.showInputDialog(frame, "Enter new description:");
+                String newDueDate = JOptionPane.showInputDialog(frame, "Enter new due date (YYYY-MM-DD):");
+                int newPriority = Integer.parseInt(JOptionPane.showInputDialog(frame, "Enter new priority (Integer):"));
+                boolean newCompletionStatus = JOptionPane.showConfirmDialog(frame, "Is the task completed?") == JOptionPane.YES_OPTION;
+
+                if (newTaskName != null && !newTaskName.isEmpty() && newDescription != null && !newDescription.isEmpty()) {
+                    new DatabaseConnection().updateTask(taskId, newTaskName, newDescription, newDueDate, newPriority, newCompletionStatus);
                     JOptionPane.showMessageDialog(frame, "Task updated successfully!");
                     refreshTaskList(taskList);
                 }
@@ -161,7 +195,6 @@ public class Main {
         }
     }
 
-    // Method to handle sorting logic
     private static void sortTasks(String sortType, JList<String> list) {
         try {
             List<String> sortedTasks;
