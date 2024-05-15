@@ -34,14 +34,14 @@ public class DatabaseConnection {
     public void updateTask(int taskId, String newTaskName, String newDescription, String newDueDate, int newPriority, boolean newCompletionStatus) throws SQLException {
         String sql = "UPDATE Tasks SET TaskNAME = ?, Description = ?, DueDate = ?, Priority = ?, CompletionStatus = ? WHERE TaskID = ?";
         try (Connection conn = this.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, newTaskName);
-            pstmt.setString(2, newDescription);
-            pstmt.setString(3, newDueDate);
-            pstmt.setInt(4, newPriority);
-            pstmt.setBoolean(5, newCompletionStatus);
-            pstmt.setInt(6, taskId);
-            pstmt.executeUpdate();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, newTaskName);
+            stmt.setString(2, newDescription);
+            stmt.setString(3, newDueDate);
+            stmt.setInt(4, newPriority);
+            stmt.setBoolean(5, newCompletionStatus);
+            stmt.setInt(6, taskId);
+            stmt.executeUpdate();
         }
     }
     
@@ -63,7 +63,7 @@ public class DatabaseConnection {
 
     public String getTaskDetails(int taskId) throws SQLException {
         String taskDetails = "No task found with ID: " + taskId;
-        String sql = "SELECT TaskNAME, Description FROM Tasks WHERE TaskID = ?";
+        String sql = "SELECT TaskNAME, Description, DueDate, Priority, CompletionStatus FROM Tasks WHERE TaskID = ?";
         try (Connection conn = this.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, taskId);
@@ -71,12 +71,16 @@ public class DatabaseConnection {
                 if (rs.next()) {
                     String name = rs.getString("TaskNAME");
                     String description = rs.getString("Description");
-                    taskDetails = "Task: " + name + "\nDescription: " + description;
+                    String dueDate = rs.getString("DueDate");
+                    int priority = rs.getInt("Priority");
+                    boolean completionStatus = rs.getBoolean("CompletionStatus");
+                    taskDetails = "Task: " + name + "\nDescription: " + description + "\nDue Date: " + dueDate + "\nPriority: " + priority + "\nCompletion Status: " + (completionStatus ? "Complete" : "Incomplete");
                 }
             }
         }
         return taskDetails;
     }
+    
 
     public List<String> searchTasks(String searchText) throws SQLException {
         List<String> foundTasks = new ArrayList<>();
