@@ -118,4 +118,17 @@ public class DatabaseConnection {
                 return "SELECT TaskID, TaskNAME FROM Tasks ORDER BY TaskID";
         }
     }
+
+    public void insertTask(String taskName, String description, String dueDate, int priority, boolean completionStatus) throws SQLException {
+        String sql = "INSERT INTO Tasks(TaskNAME, Description, DueDate, Priority, CompletionStatus) VALUES(?, ?, ?, ?, ?)";
+        try (Connection conn = this.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, taskName);
+            pstmt.setString(2, description);
+            pstmt.setString(3, dueDate);
+            pstmt.setInt(4, priority);
+            pstmt.setBoolean(5, completionStatus);
+            pstmt.executeUpdate();
+        }
+    }
 }
