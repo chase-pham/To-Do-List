@@ -87,13 +87,16 @@ public class Main {
                 String task = textField.getText();
                 String description = descriptionField.getText();
                 String dueDate = dueDateField.getText();
-                int priority = Integer.parseInt(priorityField.getText());
+                String priorityStr = priorityField.getText();
                 boolean completionStatus = completionStatusCheckBox.isSelected();
 
-                if (!task.isEmpty() && !dueDate.isEmpty() && !priorityField.getText().isEmpty()) {
-                    insertTask(task, description, dueDate, priority, completionStatus, frame, textField, dueDateField, priorityField, completionStatusCheckBox, taskList);
-                } else {
+                if (task.isEmpty() || description.isEmpty() || dueDate.isEmpty() || priorityStr.isEmpty()) {
                     JOptionPane.showMessageDialog(frame, "Please fill all fields.");
+                } else if (!isInteger(priorityStr)) {
+                    JOptionPane.showMessageDialog(frame, "Priority must be a valid integer.");
+                } else {
+                    int priority = Integer.parseInt(priorityStr);
+                    insertTask(task, description, dueDate, priority, completionStatus, frame, textField, descriptionField, dueDateField, priorityField, completionStatusCheckBox, taskList);
                 }
             });
 
@@ -112,7 +115,7 @@ public class Main {
         });
     }
 
-    private static void insertTask(String task, String description, String dueDate, int priority, boolean completionStatus, JFrame frame, JTextField textField, JTextField dueDateField, JTextField priorityField, JCheckBox completionStatusCheckBox, JList<String> taskList) {
+    private static void insertTask(String task, String description, String dueDate, int priority, boolean completionStatus, JFrame frame, JTextField textField, JTextField descriptionField, JTextField dueDateField, JTextField priorityField, JCheckBox completionStatusCheckBox, JList<String> taskList) {
         try (Connection conn = DatabaseConnection.getConnection()) {
             String sql = "INSERT INTO Tasks (TaskNAME, Description, DueDate, Priority, CompletionStatus) VALUES (?, ?, ?, ?, ?)";
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -125,6 +128,7 @@ public class Main {
                 if (rowsAffected > 0) {
                     JOptionPane.showMessageDialog(frame, "Task added successfully!");
                     textField.setText("");
+                    descriptionField.setText("");
                     dueDateField.setText("");
                     priorityField.setText("");
                     completionStatusCheckBox.setSelected(false);
@@ -158,13 +162,18 @@ public class Main {
                 String newTaskName = JOptionPane.showInputDialog(frame, "Enter new task name:");
                 String newDescription = JOptionPane.showInputDialog(frame, "Enter new description:");
                 String newDueDate = JOptionPane.showInputDialog(frame, "Enter new due date (YYYY-MM-DD):");
-                int newPriority = Integer.parseInt(JOptionPane.showInputDialog(frame, "Enter new priority (Integer):"));
-                boolean newCompletionStatus = JOptionPane.showConfirmDialog(frame, "Is the task completed?") == JOptionPane.YES_OPTION;
+                String newPriorityStr = JOptionPane.showInputDialog(frame, "Enter new priority (Integer):");
+                if (newPriorityStr != null && isInteger(newPriorityStr)) {
+                    int newPriority = Integer.parseInt(newPriorityStr);
+                    boolean newCompletionStatus = JOptionPane.showConfirmDialog(frame, "Is the task completed?") == JOptionPane.YES_OPTION;
 
-                if (newTaskName != null && !newTaskName.isEmpty() && newDescription != null && !newDescription.isEmpty()) {
-                    new DatabaseConnection().updateTask(taskId, newTaskName, newDescription, newDueDate, newPriority, newCompletionStatus);
-                    JOptionPane.showMessageDialog(frame, "Task updated successfully!");
-                    refreshTaskList(taskList);
+                    if (newTaskName != null && !newTaskName.isEmpty() && newDescription != null && !newDescription.isEmpty()) {
+                        new DatabaseConnection().updateTask(taskId, newTaskName, newDescription, newDueDate, newPriority, newCompletionStatus);
+                        JOptionPane.showMessageDialog(frame, "Task updated successfully!");
+                        refreshTaskList(taskList);
+                    }
+                } else {
+                    JOptionPane.showMessageDialog(frame, "Priority must be a valid integer.");
                 }
             } catch (NumberFormatException | SQLException ex) {
                 JOptionPane.showMessageDialog(frame, "Error updating task: " + ex.getMessage());
@@ -216,5 +225,17 @@ public class Main {
         } catch (SQLException ex) {
             JOptionPane.showMessageDialog(null, "Failed to sort tasks: " + ex.getMessage());
         }
+    }
+
+    private static boolean isInteger(String str) {
+        if (str == null) {
+            return false;
+        }
+        try {
+            Integer.parseInt(str);
+        } catch (NumberFormatException e) {
+            return false;
+        }
+        return true;
     }
 }
