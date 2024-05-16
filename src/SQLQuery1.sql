@@ -1,6 +1,7 @@
 USE ToDoListDB;
 GO
 
+-- Create the Tasks table if it doesn't exist
 IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'Tasks')
 BEGIN
     CREATE TABLE Tasks (
@@ -14,9 +15,19 @@ BEGIN
 END
 GO
 
--- If the table exists, alter it to add missing columns (only if they do not already exist)
+-- If the table exists, ensure all necessary columns are present
 IF EXISTS (SELECT * FROM sys.tables WHERE name = 'Tasks')
 BEGIN
+    IF NOT EXISTS (SELECT * FROM sys.columns WHERE name = 'Description' AND object_id = OBJECT_ID('Tasks'))
+    BEGIN
+        ALTER TABLE Tasks ADD Description TEXT;
+    END;
+
+    IF NOT EXISTS (SELECT * FROM sys.columns WHERE name = 'DueDate' AND object_id = OBJECT_ID('Tasks'))
+    BEGIN
+        ALTER TABLE Tasks ADD DueDate DATE;
+    END;
+
     IF NOT EXISTS (SELECT * FROM sys.columns WHERE name = 'Priority' AND object_id = OBJECT_ID('Tasks'))
     BEGIN
         ALTER TABLE Tasks ADD Priority INT DEFAULT 1;
@@ -25,11 +36,6 @@ BEGIN
     IF NOT EXISTS (SELECT * FROM sys.columns WHERE name = 'CompletionStatus' AND object_id = OBJECT_ID('Tasks'))
     BEGIN
         ALTER TABLE Tasks ADD CompletionStatus BIT DEFAULT 0;
-    END;
-
-    IF NOT EXISTS (SELECT * FROM sys.columns WHERE name = 'DueDate' AND object_id = OBJECT_ID('Tasks'))
-    BEGIN
-        ALTER TABLE Tasks ADD DueDate DATE;
     END;
 END
 GO

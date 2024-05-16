@@ -47,18 +47,23 @@ public class DatabaseConnection {
     
     public List<String> getAllTasksWithIds() throws SQLException {
         List<String> tasks = new ArrayList<>();
-        String sql = "SELECT TaskID, TaskNAME FROM Tasks;";
+        String sql = "SELECT TaskID, TaskNAME, DueDate, Priority, CompletionStatus, Description FROM Tasks;";
         try (Connection conn = this.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
             while (rs.next()) {
                 int id = rs.getInt("TaskID");
                 String name = rs.getString("TaskNAME");
-                tasks.add(id + ": " + name); // Combining ID and name for display
+                String dueDate = rs.getString("DueDate");
+                int priority = rs.getInt("Priority");
+                boolean completionStatus = rs.getBoolean("CompletionStatus");
+                String description = rs.getString("Description");
+                tasks.add(id + ": " + name + " | DueDate: " + dueDate + " | Priority: " + priority + " | Completed: " + (completionStatus ? "Yes" : "No") + " | Description: " + description);
             }
         }
         return tasks;
     }
+    
     
 
     public String getTaskDetails(int taskId) throws SQLException {
