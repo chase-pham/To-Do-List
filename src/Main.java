@@ -1,8 +1,7 @@
 import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.border.TitledBorder;
-import java.awt.Font;
-import java.awt.Color;
+import java.awt.*;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -16,12 +15,28 @@ public class Main {
         SwingUtilities.invokeLater(() -> {
             JFrame frame = new JFrame("To-Do List Application");
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            frame.setSize(350, 500); // Increased height to accommodate new fields
+            frame.setSize(400, 600); // Adjusted size for better layout
 
+            // Create panels for different sections
+            JPanel taskPanel = new JPanel();
+            taskPanel.setBorder(new TitledBorder("Task Details"));
+            taskPanel.setLayout(new GridBagLayout());
+
+            JPanel actionPanel = new JPanel();
+            actionPanel.setBorder(new TitledBorder("Actions"));
+            actionPanel.setLayout(new GridBagLayout());
+
+            JPanel searchPanel = new JPanel();
+            searchPanel.setBorder(new TitledBorder("Search and Sort"));
+            searchPanel.setLayout(new GridBagLayout());
+
+            JPanel listPanel = new JPanel();
+            listPanel.setBorder(new TitledBorder("Tasks"));
+            listPanel.setLayout(new BorderLayout());
+
+            // Create components
             JTextField textField = new JTextField(20);
             textField.setBorder(new TitledBorder("Enter Task"));
-            Border border = BorderFactory.createTitledBorder("Task");
-            textField.setBorder(border);
 
             JTextField descriptionField = new JTextField(20);
             descriptionField.setBorder(BorderFactory.createTitledBorder("Description"));
@@ -47,39 +62,67 @@ public class Main {
             JButton sortButton = new JButton("Sort");
 
             JList<String> taskList = new JList<>();
-
-            Font font = new Font("Arial", Font.PLAIN, 14);
-            textField.setFont(font);
-            descriptionField.setFont(font);
-            dueDateField.setFont(font);
-            priorityField.setFont(font);
-            completionStatusCheckBox.setFont(font);
-            createButton.setFont(font);
-            deleteButton.setFont(font);
-            updateButton.setFont(font);
-            taskList.setFont(font);
-
             taskList.setSelectionBackground(new Color(200, 200, 255)); // Light blue selection
             taskList.setSelectionForeground(Color.DARK_GRAY);
 
-            // Layout components in a panel
-            JPanel panel = new JPanel();
-            panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS)); // Use BoxLayout for vertical stacking
-            panel.add(textField);
-            panel.add(descriptionField);
-            panel.add(dueDateField);
-            panel.add(priorityField);
-            panel.add(completionStatusCheckBox);
-            panel.add(createButton);
-            panel.add(deleteButton);
-            panel.add(updateButton);
-            panel.add(searchField);
-            panel.add(searchButton);
-            panel.add(sortComboBox);
-            panel.add(sortButton);
-            panel.add(new JScrollPane(taskList)); // Add scrolling to task list
+            // Set font for all components
+            Font font = new Font("Arial", Font.PLAIN, 14);
+            Component[] components = {textField, descriptionField, dueDateField, priorityField, completionStatusCheckBox,
+                    createButton, deleteButton, updateButton, searchField, searchButton, sortComboBox, sortButton, taskList};
+            for (Component component : components) {
+                component.setFont(font);
+            }
 
-            frame.getContentPane().add(panel); // Adds panel to frame
+            // Add components to panels using GridBagLayout
+            GridBagConstraints gbc = new GridBagConstraints();
+            gbc.insets = new Insets(5, 5, 5, 5);
+            gbc.fill = GridBagConstraints.HORIZONTAL;
+
+            // Task Panel
+            gbc.gridx = 0;
+            gbc.gridy = 0;
+            taskPanel.add(textField, gbc);
+            gbc.gridy = 1;
+            taskPanel.add(descriptionField, gbc);
+            gbc.gridy = 2;
+            taskPanel.add(dueDateField, gbc);
+            gbc.gridy = 3;
+            taskPanel.add(priorityField, gbc);
+            gbc.gridy = 4;
+            taskPanel.add(completionStatusCheckBox, gbc);
+
+            // Action Panel
+            gbc.gridx = 0;
+            gbc.gridy = 0;
+            actionPanel.add(createButton, gbc);
+            gbc.gridy = 1;
+            actionPanel.add(deleteButton, gbc);
+            gbc.gridy = 2;
+            actionPanel.add(updateButton, gbc);
+
+            // Search Panel
+            gbc.gridx = 0;
+            gbc.gridy = 0;
+            searchPanel.add(searchField, gbc);
+            gbc.gridy = 1;
+            searchPanel.add(searchButton, gbc);
+            gbc.gridy = 2;
+            searchPanel.add(sortComboBox, gbc);
+            gbc.gridy = 3;
+            searchPanel.add(sortButton, gbc);
+
+            // List Panel
+            listPanel.add(new JScrollPane(taskList), BorderLayout.CENTER);
+
+            // Main Panel
+            JPanel mainPanel = new JPanel();
+            mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
+            mainPanel.add(taskPanel);
+            mainPanel.add(actionPanel);
+            mainPanel.add(searchPanel);
+            mainPanel.add(listPanel);
+
+            frame.getContentPane().add(mainPanel); // Adds main panel to frame
             frame.setVisible(true);
 
             // Add action listener to button
