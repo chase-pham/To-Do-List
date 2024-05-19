@@ -8,10 +8,11 @@ import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
 
-
 public class DatabaseConnection {
     // Include "integratedSecurity=true" to use Windows Authentication
-    private static final String URL = "jdbc:sqlserver://localhost:1433;databaseName=ToDoListDB;user=TestUser;password=TestUser123!;encrypt=false";
+    private static final String URL = "jdbc:sqlserver://localhost:1433;databaseName=ToDoListDB";
+    private static final String USER = "TestUser";
+    private static final String PASSWORD = "TestUser123!"; // Replace with your actual password
 
     public static Connection getConnection() throws SQLException {
         // Load SQL Server JDBC driver to manage integrated security
@@ -27,16 +28,17 @@ public class DatabaseConnection {
     public void deleteTask(int taskId) throws SQLException {
         String sql = "DELETE FROM Tasks WHERE TaskID = ?";
         try (Connection conn = this.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, taskId);
             stmt.executeUpdate();
         }
-    }    
+    }
 
-    public void updateTask(int taskId, String newTaskName, String newDescription, String newDueDate, int newPriority, boolean newCompletionStatus) throws SQLException {
+    public void updateTask(int taskId, String newTaskName, String newDescription, String newDueDate, int newPriority,
+            boolean newCompletionStatus) throws SQLException {
         String sql = "UPDATE Tasks SET TaskNAME = ?, Description = ?, DueDate = ?, Priority = ?, CompletionStatus = ? WHERE TaskID = ?";
         try (Connection conn = this.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, newTaskName);
             stmt.setString(2, newDescription);
             stmt.setString(3, newDueDate);
@@ -46,13 +48,13 @@ public class DatabaseConnection {
             stmt.executeUpdate();
         }
     }
-    
+
     public List<String> getAllTasksWithIds() throws SQLException {
         List<String> tasks = new ArrayList<>();
         String sql = "SELECT TaskID, TaskNAME, DueDate, Priority, CompletionStatus, Description FROM Tasks;";
         try (Connection conn = this.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
+                PreparedStatement stmt = conn.prepareStatement(sql);
+                ResultSet rs = stmt.executeQuery()) {
             while (rs.next()) {
                 int id = rs.getInt("TaskID");
                 String name = rs.getString("TaskNAME");
@@ -60,19 +62,18 @@ public class DatabaseConnection {
                 int priority = rs.getInt("Priority");
                 boolean completionStatus = rs.getBoolean("CompletionStatus");
                 String description = rs.getString("Description");
-                tasks.add(id + ": " + name + " | DueDate: " + dueDate + " | Priority: " + priority + " | Completed: " + (completionStatus ? "Yes" : "No") + " | Description: " + description);
+                tasks.add(id + ": " + name + " | DueDate: " + dueDate + " | Priority: " + priority + " | Completed: "
+                        + (completionStatus ? "Yes" : "No") + " | Description: " + description);
             }
         }
         return tasks;
     }
-    
-    
 
     public String getTaskDetails(int taskId) throws SQLException {
         String taskDetails = "No task found with ID: " + taskId;
         String sql = "SELECT TaskNAME, Description, DueDate, Priority, CompletionStatus FROM Tasks WHERE TaskID = ?";
         try (Connection conn = this.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, taskId);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
@@ -81,19 +82,20 @@ public class DatabaseConnection {
                     String dueDate = rs.getString("DueDate");
                     int priority = rs.getInt("Priority");
                     boolean completionStatus = rs.getBoolean("CompletionStatus");
-                    taskDetails = "Task: " + name + "\nDescription: " + description + "\nDue Date: " + dueDate + "\nPriority: " + priority + "\nCompletion Status: " + (completionStatus ? "Complete" : "Incomplete");
+                    taskDetails = "Task: " + name + "\nDescription: " + description + "\nDue Date: " + dueDate
+                            + "\nPriority: " + priority + "\nCompletion Status: "
+                            + (completionStatus ? "Complete" : "Incomplete");
                 }
             }
         }
         return taskDetails;
     }
-    
 
     public List<String> searchTasks(String searchText) throws SQLException {
         List<String> foundTasks = new ArrayList<>();
         String sql = "SELECT TaskID, TaskNAME FROM Tasks WHERE TaskNAME LIKE ?";
         try (Connection conn = this.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, "%" + searchText + "%");
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
@@ -109,9 +111,9 @@ public class DatabaseConnection {
     public List<String> getTasksSortedBy(String columnName) throws SQLException {
         List<String> tasks = new ArrayList<>();
         String sql = "SELECT TaskID, TaskNAME FROM Tasks ORDER BY " + columnName;
-        try (Connection conn = getConnection();  // Ensure this method is static if called statically
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
+        try (Connection conn = getConnection(); // Ensure this method is static if called statically
+                PreparedStatement stmt = conn.prepareStatement(sql);
+                ResultSet rs = stmt.executeQuery()) {
             while (rs.next()) {
                 int id = rs.getInt("TaskID");
                 String name = rs.getString("TaskNAME");
@@ -119,8 +121,8 @@ public class DatabaseConnection {
             }
         }
         return tasks;
-    }    
-    
+    }
+
     private String buildSortQuery(String sortBy) {
         switch (sortBy) {
             case "Priority":
@@ -134,10 +136,11 @@ public class DatabaseConnection {
         }
     }
 
-    public void insertTask(String taskName, String description, String dueDate, int priority, boolean completionStatus) throws SQLException {
+    public void insertTask(String taskName, String description, String dueDate, int priority, boolean completionStatus)
+            throws SQLException {
         String sql = "INSERT INTO Tasks(TaskNAME, Description, DueDate, Priority, CompletionStatus) VALUES(?, ?, ?, ?, ?)";
         try (Connection conn = this.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, taskName);
             pstmt.setString(2, description);
             pstmt.setString(3, dueDate);
